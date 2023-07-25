@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 
 using json = nlohmann::json;
 
-class MqttSinkTest : public testing::Test
+class MqttSink2Test : public testing::Test
 {
 protected:
   void SetUp() override
@@ -180,7 +180,22 @@ protected:
   uint16_t m_port {0};
 };
 
-TEST_F(MqttSinkTest, mqtt_sink_should_publish_Probe)
+TEST_F(MqttSink2Test, mqtt_sink_flat_formatt_check)
+{
+  ConfigOptions options {{MqttFormatFlat, 9}, {DeviceTopic, "Device/F/l/a/t/F/o/r/m/a/t"s}};
+  createServer(options);
+  startServer();
+
+  ASSERT_NE(0, m_port);
+
+  createAgent("", options);
+  auto service = m_agentTestHelper->getMqtt2Service();
+
+  ASSERT_TRUE(waitFor(10s, [&service]() { return service->isConnected(); }));
+}
+
+
+TEST_F(MqttSink2Test, mqtt_sink_should_publish_Probe)
 {
   ConfigOptions options;
   createServer(options);
@@ -219,7 +234,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Probe)
   waitFor(1s, [&gotDevice]() { return gotDevice; });
 }
 
-TEST_F(MqttSinkTest, mqtt_sink_should_publish_Sample)
+TEST_F(MqttSink2Test, mqtt_sink_should_publish_Sample)
 {
   ConfigOptions options;
   createServer(options);
@@ -258,7 +273,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Sample)
   waitFor(1s, [&gotSample]() { return gotSample; });
 }
 
-TEST_F(MqttSinkTest, mqtt_sink_should_publish_Current)
+TEST_F(MqttSink2Test, mqtt_sink_should_publish_Current)
 {
   ConfigOptions options;
   createServer(options);
