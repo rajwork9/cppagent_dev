@@ -67,7 +67,10 @@ namespace mtconnect {
                   {configuration::MqttPrivateKey, string()},
                   {configuration::MqttCert, string()},
                   {configuration::MqttClientId, string()},
-                  {configuration::MqttHost, string()}});
+                  {configuration::MqttHost, string()},
+                  {configuration::MqttUserName, string()},
+                  {configuration::MqttPassword, string()}}
+      );
 
       AddDefaultedOptions(block, m_options,
                           {{configuration::MqttPort, 1883},
@@ -75,6 +78,7 @@ namespace mtconnect {
                            {configuration::AutoAvailable, false},
                            {configuration::RealTime, false},
                            {configuration::RelativeTime, false}});
+
       loadTopics(block, m_options);
 
       if (!HasOption(m_options, configuration::MqttHost) &&
