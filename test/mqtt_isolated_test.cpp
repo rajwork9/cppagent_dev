@@ -203,6 +203,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_should_receive_loopback_publication
                          {MqttPort, 0},
                          {MqttTls, false},                       
                          {AutoAvailable, false},
+        {MqttUserName, "MQTT-SINK"s}, {MqttPassword, "mtconnect"s},
                          {RealTime, false}};
 
   createServer(options);
@@ -213,6 +214,15 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_should_receive_loopback_publication
   std::uint16_t pid_sub1;
 
   auto client = mqtt::make_async_client(m_agentTestHelper->m_ioContext.get(), "localhost", m_port);
+  std::optional<std::string>  username =
+      GetOption<std::string>(options, configuration::MqttUserName);
+  std::optional<std::string> password =
+      GetOption<std::string>(options, configuration::MqttPassword);
+
+  if (username)
+    client->set_user_name(*username);
+  if (password)
+    client->set_password(*password);
 
   client->set_client_id("cliendId1");
   client->set_clean_session(true);
@@ -274,6 +284,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_should_receive_loopback_publication
       std::cout << "packet_id: " << *packet_id << std::endl;
     std::cout << "topic_name: " << topic_name << std::endl;
     std::cout << "contents: " << contents << std::endl;
+
 
     EXPECT_EQ("mqtt_tcp_client_cpp/topic1", topic_name);
     EXPECT_EQ("test1", contents);
