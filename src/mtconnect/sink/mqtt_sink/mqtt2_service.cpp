@@ -39,11 +39,16 @@
         // create a json printer
         // call print
 
-        Mqtt2Service::Mqtt2Service(boost::asio::io_context &context, sink::SinkContractPtr &&contract,
-                                 const ConfigOptions &options, const ptree &config)
-          : Sink("Mqtt2Service", std::move(contract)), m_context(context), m_options(options)
+        Mqtt2Service::Mqtt2Service(boost::asio::io_context &context,
+                                   sink::SinkContractPtr &&contract, const ConfigOptions &options,
+                                   const ptree &config)
+          : Sink("Mqtt2Service", std::move(contract)),
+            m_context(context),
+            m_options(options),
+            m_timer(context)
         {
-          auto jsonPrinter = dynamic_cast<printer::JsonPrinter *>(m_sinkContract->getPrinter("json"));
+          auto jsonPrinter =
+              dynamic_cast<printer::JsonPrinter *>(m_sinkContract->getPrinter("json"));
           m_jsonPrinter = make_unique<entity::JsonEntityPrinter>(jsonPrinter->getJsonVersion());
 
           GetOptions(config, m_options, options);
@@ -93,6 +98,19 @@
           m_assetPrefix = get<string>(m_options[configuration::AssetTopic]);
           m_observationPrefix = get<string>(m_options[configuration::ObservationTopic]);
 
+          int mqttFormatFlatto(GetOption<int>(options, configuration::MqttFormatFlat).value_or(7));
+
+          std::string::difference_type nDeviceFormatFlat =
+              std::count(m_devicePrefix.begin(), m_devicePrefix.end(), '/');
+          std::string::difference_type nAssertFormatFlat =
+              std::count(m_assetPrefix.begin(), m_assetPrefix.end(), '/');
+          std::string::difference_type nObservationFormatFlat =
+              std::count(m_observationPrefix.begin(), m_observationPrefix.end(), '/');
+
+          if (nDeviceFormatFlat > mqttFormatFlatto || nAssertFormatFlat > mqttFormatFlatto ||
+              nObservationFormatFlat > mqttFormatFlatto)
+            LOG(warning) << "Mqtt Flat Format is Exceeds the limit allowed";
+
           if (IsOptionSet(m_options, configuration::MqttTls))
           {
             m_client = make_shared<MqttTlsClient>(m_context, m_options, std::move(clientHandler));
@@ -120,6 +138,25 @@
         }
 
         std::shared_ptr<MqttClient> Mqtt2Service::getClient() { return m_client; }
+
+        struct AsyncCurrentServiceResponse
+        {
+          AsyncCurrentServiceResponse(asio::io_context &context)
+            : m_timer(context)
+          {}
+
+          std::weak_ptr<Sink> m_service;
+          chrono::milliseconds m_interval;
+          unique_ptr<JsonEntityPrinter> m_printer {nullptr};
+          boost::asio::steady_timer m_timer;
+          bool m_pretty {false};
+        };
+
+        //void Mqtt2Service::probeCurrentRequest(const int interval,
+        //                                       const std::optional<std::string> &device,
+        //                                       bool pretty)
+        //{
+        //}
 
         bool Mqtt2Service::publish(observation::ObservationPtr &observation)
         {
@@ -178,8 +215,7 @@
           stringstream buffer;
           buffer << doc;
 
-          if (m_client)
-
+          if (m_client)             
             m_client->publish(topic, buffer.str());
 
           return true;

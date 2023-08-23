@@ -51,9 +51,10 @@ namespace mtconnect {
                    {{configuration::MqttCaCert, string()},
                     {configuration::MqttPrivateKey, string()},
                     {configuration::MqttCert, string()},
+                    {configuration::MqttClientId, string()},
                     {configuration::MqttUserName, string()},
-                    {configuration::MqttPassword, string()},
-                    {configuration::MqttClientId, string()}});
+                    {configuration::MqttPassword, string()}});
+
         AddDefaultedOptions(config, m_options,
                             {{configuration::MqttHost, "127.0.0.1"s},
                              {configuration::DeviceTopic, "MTConnect/Device/"s},
