@@ -67,6 +67,8 @@ namespace mtconnect {
                   {configuration::MqttPrivateKey, string()},
                   {configuration::MqttCert, string()},
                   {configuration::MqttClientId, string()},
+                  {configuration::MqttUserName, string()},
+                  {configuration::MqttPassword, string()},
                   {configuration::MqttHost, string()}});
 
       AddDefaultedOptions(block, m_options,
